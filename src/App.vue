@@ -1,18 +1,21 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <RedactorX ref="redactorx" v-model="content" :config="configOptions"></RedactorX>
+    {{ content }}
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import RedactorX from '@/RedactorX.vue'
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
+  components:{RedactorX},
+  data() {
+    return {
+      content:'test',
+      configOptions: {}
+    }
+  },
 }
 </script>
 
