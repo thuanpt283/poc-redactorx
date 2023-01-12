@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <RedactorX ref="redactorx" v-model="content" :config="configOptions"></RedactorX>
-    {{ content }}
+    <!-- {{ content }} -->
   </div>
 </template>
 
@@ -12,7 +12,7 @@ export default {
   components:{RedactorX},
   data() {
     return {
-      content:'test',
+      content:'',
       configOptions: {}
     }
   },

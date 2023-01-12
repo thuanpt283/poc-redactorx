@@ -1,5 +1,8 @@
 <template>
     <div>
+        <ul style="display: flex;">
+        <li style="margin: 0 20px;" v-for="(value, key, index) in templateList" :key="key" @click="insertHTML"><img :src="'https://dummyimage.com/150x100/000/fff&text='+key" :data-rx-drop-id="'card-0'+index"></li>
+    </ul>
     <textarea
         ref="redactorx"
         v-bind="$attrs"
@@ -7,19 +10,11 @@
         :placeholder="placeholder"
         :value="value"
     />
-
-
-    <ul style="display: flex;">
-        <li v-for="(value, key, index) in templateList" :key="key" @click="insertHTML"><img :src="'https://dummyimage.com/300x200/000/fff&text='+key" :data-rx-drop-id="'card-0'+index"></li>
-    </ul>
     <div 
     v-for="(value, key, index) in templateList" :key="key"
     :data-rx-drop-item="'card-0'+index" 
     style="display: none" 
     v-html="value"></div>
-    <!-- <div data-rx-drop-item="card-01" style="display: none" v-html="templateList.salutation"></div>
-    <div data-rx-drop-item="card-02" style="display: none" v-html="templateList.detail"></div>
-    <div data-rx-drop-item="card-03" style="display: none" v-html="templateList.signature"></div> -->
     </div>
 </template>
 <script>
