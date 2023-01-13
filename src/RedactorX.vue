@@ -44,7 +44,7 @@ export default {
   data() {
     return {
         templateList: {
-            salutation : '<p>Hello <mark>{order.client.name}</mark></p><br/>',
+            salutation : '<p>Hello <mark>{order.client.name}</mark></p>',
             detail:`<table>
                     <tbody>
                         <tr>
@@ -68,8 +68,8 @@ export default {
                             <td>Conventional USDA to FHA Conversion</td>
                         </tr>
                     </tbody>
-                </table><br/>`,
-            signature:'<p>Regards,</p><br/>'
+                </table>`,
+            signature:'<p>Regards,</p>'
         }
     }
   },
@@ -82,18 +82,6 @@ export default {
   },
   mounted() {
     this.init();
-    RedactorX.add("plugin", "myplugin", {
-      start: function () {
-        this.app.topbar.add("mybutton", {
-          title: "My Button",
-          icon: '<i class="fa fa-superpowers"></i>',
-          command: "myplugin.toggle",
-        });
-      },
-      toggle: function (params, button) {
-        alert("Button Toggle");
-      },
-    });
   },
   beforeDestroy() {
     this.destroy();
@@ -118,53 +106,69 @@ export default {
       } else {
         this.config.subscribe["editor.change"] = subscribe["editor.change"];
       }
-      RedactorX.add("plugin", "myplugin", {
-        start: function () {
-          this.app.toolbar.add("mybutton", {
-            title: "My Button",
-            icon: '<i class="fa fa-file-alt"></i>',
-            command: 'myplugin.popup',
-            params: {
-              arg1: 'value1',
-              arg2: 'value2',
-            },
-          });
+        RedactorX.add("plugin", "clips", {
+        translations: {
+            en: {
+                clips: {
+                    clips: "Clips"
+                }
+            }
         },
-        popup: function(params, button, name, e) {
-            // create
-            this.app.popup.create('myplugin', {
-                items: {
-                    salutation: {
-                        title: 'Salutation',
-                        content: me.templateList.salutation,
-                        command: 'myplugin.toggle'
-                    },
-                    detail: {
-                        title: 'Details of New Order to Client',
-                        content: me.templateList.detail,
-                        command: 'myplugin.toggle'
-                    },
-                    signature: {
-                        title: 'Signature of New Order to Client',
-                        content: me.templateList.signature,
-                        command: 'myplugin.toggle'
-                    }
+        defaults: {
+            icon: '<svg height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="m12.1666667 1c1.0193924 0 1.8333333.83777495 1.8333333 1.85714286v10.28571424c0 1.0193679-.8139409 1.8571429-1.8333333 1.8571429h-8.33333337c-1.01868744 0-1.83333333-.8379215-1.83333333-1.8571429v-10.28571424c0-1.01922137.81464589-1.85714286 1.83333333-1.85714286zm-.1666667 2h-8v10h8zm-2 7c.5522847 0 1 .4477153 1 1 0 .5128358-.3860402.9355072-.8833789.9932723l-.1166211.0067277h-4c-.55228475 0-1-.4477153-1-1 0-.5128358.38604019-.9355072.88337887-.9932723l.11662113-.0067277zm0-3c.5522847 0 1 .44771525 1 1 0 .51283584-.3860402.93550716-.8833789.99327227l-.1166211.00672773h-4c-.55228475 0-1-.44771525-1-1 0-.51283584.38604019-.93550716.88337887-.99327227l.11662113-.00672773zm0-3c.5522847 0 1 .44771525 1 1 0 .51283584-.3860402.93550716-.8833789.99327227l-.1166211.00672773h-4c-.55228475 0-1-.44771525-1-1 0-.51283584.38604019-.93550716.88337887-.99327227l.11662113-.00672773z"/></svg>',
+            items: !1
+        },
+        start: function() {
+            this.opts.clips.items && this.app.toolbar.add("clips", {
+                title: "## clips.clips ##",
+                icon: this.opts.clips.icon,
+                command: "clips.popup",
+                blocks: {
+                    all: "editable"
+                }
+            })
+        },
+        popup: function(t, i) {
+            var p = {};
+            for (var s in this.opts.clips.items)
+                p[s] = {
+                    title: this.opts.clips.items[s].title,
+                    command: "clips.insert"
+                };
+            this.app.popup.create("clips", {
+                items: p
+            }),
+            this.app.popup.open({
+                button: i
+            })
+        },
+        insert: function(t, i, p) {
+            this.app.popup.close();
+            var s = this.opts.clips.items[p].html;
+            this.app.editor.insertContent({
+                html: s
+            })
+        }
+    });
+
+    Object.assign(this.config, {
+        plugins: ["clips"],
+        clips: {
+            items: {
+                salutation: {
+                    title: 'Salutation',
+                    html: me.templateList.salutation,
                 },
-            });
-
-            // open
-            this.app.popup.open({ button: button });
+                detail: {
+                    title: 'Details of New Order to Client',
+                    html: me.templateList.detail,
+                },
+                signature: {
+                    title: 'Signature of New Order to Client',
+                    html: me.templateList.signature,
+                }
+            }
         },
-        toggle: function (params, button, name, e) {
-          // get params
-
-          me.insertHTML(button.params.content)
-          this.app.popup.close();
-          console.log(button.params.content);
-        },
-      });
-      Object.assign(this.config, {
-        plugins: ["myplugin"],
         context: true,
         control: true,
         reorder: true
