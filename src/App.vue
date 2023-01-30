@@ -17,7 +17,7 @@
 <script>
 import RedactorXComponent from "@/RedactorX.vue";
 
-import RedactorX from "@/assets/redactorx.js";
+import RedactorX from "@/assets/redactorx.min.js";
 export default {
   name: "App",
   components: { RedactorXComponent },
@@ -139,7 +139,7 @@ export default {
           };
           this.opts.draggable[key] = html
           me.$nextTick(() => {
-            this.app.editor.load()
+            this.app.editor._buildDraggable();
           })
         },
       });
