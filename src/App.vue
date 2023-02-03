@@ -8,7 +8,7 @@
     <RedactorXComponent name="editorArea" :config="configOptions"></RedactorXComponent>
     <hr style="margin: 50px 0"/>
     <h1>Add Template</h1>
-    <RedactorXComponent name="templateArea" v-model="content" :config="{}"></RedactorXComponent>
+    <RedactorXComponent name="templateArea" v-model="content" :config="templateOptions"></RedactorXComponent>
     <button @click="addTemplate">Add template</button>
     <p>{{ content }}</p>
   </div>
@@ -16,34 +16,56 @@
 
 <script>
 import RedactorXComponent from "@/RedactorX.vue";
+import '@/assets/redactorx.min.js';
+import '@/assets/plugins/inlineformat.min.js';
+import '@/assets/plugins/templates.min.js';
+import '@/assets/plugins/variables.min.js';
 
-import RedactorX from "@/assets/redactorx.min.js";
 export default {
   name: "App",
   components: { RedactorXComponent },
   data() {
     return {
       content: "",
+      listVariable: [
+        {
+          title: 'Last Name',
+          html: 'last_name'
+        },
+        {
+          title: 'First Name',
+          html: 'first_name'
+        },
+        {
+          title: 'Appraiser ID',
+          html: 'appraiser_id'
+        },
+        {
+          title: 'Borrower',
+          html: 'borrower'
+        },
+      ],
       configOptions: {},
+      templateOptions: {},
       templateList: {
-        salutation: "<p>Hello <mark>{order.client.name}</mark></p>",
+        salutation: "<p>Hello <span class='redspan' contenteditable='false'>{order.client.name}</span></p>",
         detail: `<table>
                   <tbody>
                       <tr>
                           <th>Borrower:</th>
-                          <td><mark>{order.borrower.last_name}</mark></td>
+                          <td><span class='redspan' contenteditable='false'>{order.borrower.last_name}</span></td>
                       </tr>
                       <tr>
                           <th>Lender:</th>
-                          <td><mark>{order.lender.name}</mark></td>
+                          <td><span class='redspan' contenteditable='false'>{order.lender.name}</span></td>
                       </tr>
                       <tr>
                           <th>Address:</th>
-                          <td><mark>{order.address.full_address}</mark></td>
+                          <td><span class='redspan' contenteditable='false'>{order.address.full_address}</span></td>
                       </tr>
                       <tr>
                           <th>Loan Number:</th>
-                          <td><mark>{order.lender_loan_number}</mark></td>
+                          <td><span class='redspan' contenteditable='false'>{order.lender_loan_number}</span></td>
                       </tr>
                       <tr>
                           <th>Product:</th>
@@ -58,18 +80,25 @@ export default {
   methods: {
     addTemplate() {
       if(!this.content) return
+      this.content = this.content.replaceAll('data-contenteditable','contenteditable')
       this.$set(this.templateList,`item${Object.keys(this.templateList).length}`,this.content)
-      this.editorArea.clips.addItem(
-        `item${Object.keys(this.templateList).length -1}`,
-        `item${Object.keys(this.templateList).length -1}`,
-        this.content
-      );
+
+      this.editorArea.opts.templates.items[`item${Object.keys(this.templateList).length -1}`] = {
+        title: `item${Object.keys(this.templateList).length -1}`,
+        html: this.content,
+      };
+      this.editorArea.opts.draggable[`item${Object.keys(this.templateList).length -1}`] = this.content
+      this.$nextTick(() => {
+        this.editorArea.editor._buildDraggable();
+        this.templateArea.editor.setEmpty()
+      })
     },
     init() {
       const me = this
       Object.assign(this.configOptions, {
-        plugins: ["clips"],
-        clips: {
+        plugins: ["templates","variables"],
+        templates: {
+          title: 'Templates',
           items: {
             salutation: {
               title: "Salutation",
@@ -85,64 +114,52 @@ export default {
             },
           },
         },
+        variables: {
+          items: this.listVariable,
+          custom: true,
+        },
+        subscribe: {
+            'variables.insert': function(event) {
+                var html = event.get('html');
+                this.app.editor.insertContent({
+                    html: `<span style="color: #fff; background: #ff3265; padding: 2px 8px; border-radius: 3px;" contenteditable="false" data-contenteditable="false">{${html}}</span>`,
+                });
+            }
+        },
         draggable:me.templateList,
         reorder: true,
+       
       });
-      RedactorX.add("plugin", "clips", {
-        translations: {
-          en: {
-            clips: {
-              clips: "Clips",
-            },
-          },
+      Object.assign(this.templateOptions, {
+        plugins: ["inlineformat","variables"],
+        inlineformat: {
+            items: ['redspan'],
+            itemsObj: {
+                "redspan": {
+                    title: '<span style="color: #fff; background: #ff3265; padding: 2px 8px; border-radius: 3px;">Redmark</span>',
+                    params: {
+                        tag: 'span',
+                        attr: {
+                            'class': 'redspan',
+                            'data-contenteditable': 'false'
+                        }
+                    }
+                },
+            }
         },
-        defaults: {
-          icon: '<svg height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="m12.1666667 1c1.0193924 0 1.8333333.83777495 1.8333333 1.85714286v10.28571424c0 1.0193679-.8139409 1.8571429-1.8333333 1.8571429h-8.33333337c-1.01868744 0-1.83333333-.8379215-1.83333333-1.8571429v-10.28571424c0-1.01922137.81464589-1.85714286 1.83333333-1.85714286zm-.1666667 2h-8v10h8zm-2 7c.5522847 0 1 .4477153 1 1 0 .5128358-.3860402.9355072-.8833789.9932723l-.1166211.0067277h-4c-.55228475 0-1-.4477153-1-1 0-.5128358.38604019-.9355072.88337887-.9932723l.11662113-.0067277zm0-3c.5522847 0 1 .44771525 1 1 0 .51283584-.3860402.93550716-.8833789.99327227l-.1166211.00672773h-4c-.55228475 0-1-.44771525-1-1 0-.51283584.38604019-.93550716.88337887-.99327227l.11662113-.00672773zm0-3c.5522847 0 1 .44771525 1 1 0 .51283584-.3860402.93550716-.8833789.99327227l-.1166211.00672773h-4c-.55228475 0-1-.44771525-1-1 0-.51283584.38604019-.93550716.88337887-.99327227l.11662113-.00672773z"/></svg>',
-          items: !1,
+        variables: {
+          items: this.listVariable,
+          custom: true,
         },
-        start: function () {
-          this.opts.clips.items &&
-            this.app.toolbar.add("clips", {
-              title: "## clips.clips ##",
-              icon: this.opts.clips.icon,
-              command: "clips.popup",
-              blocks: {
-                all: "editable",
-              },
-            });
-        },
-        popup: function (t, i) {
-          var p = {};
-          for (var s in this.opts.clips.items)
-            p[s] = {
-              title: this.opts.clips.items[s].title,
-              command: "clips.insert",
-            };
-          this.app.popup.create("clips", {
-            items: p,
-          }),
-            this.app.popup.open({
-              button: i,
-            });
-        },
-        insert: function (t, i, p) {
-          this.app.popup.close();
-          var s = this.opts.clips.items[p].html;
-          this.app.editor.insertContent({
-            html: s,
-          });
-        },
-        addItem: function (key, title, html) {
-          this.opts.clips.items[key] = {
-            title,
-            html,
-          };
-          this.opts.draggable[key] = html
-          me.$nextTick(() => {
-            this.app.editor._buildDraggable();
-          })
-        },
-      });
+        subscribe: {
+            'variables.insert': function(event) {
+                var html = event.get('html');
+                this.app.editor.insertContent({
+                    html: `<span style="color: #fff; background: #ff3265; padding: 2px 8px; border-radius: 3px;" contenteditable="false" data-contenteditable="false">{${html}}</span>`,
+                });
+            }
+        }
+      })
       
     },
   },
@@ -160,5 +177,12 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.rx-content .redspan {
+  display: inline-block;
+  color: #fff;
+  background: #ff3265;
+  padding: 2px 8px;
+  border-radius: 3px;
 }
 </style>
