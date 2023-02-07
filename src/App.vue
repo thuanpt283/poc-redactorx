@@ -97,6 +97,7 @@ export default {
       const me = this
       Object.assign(this.configOptions, {
         plugins: ["templates","variables"],
+        source: false,
         templates: {
           title: 'Templates',
           items: {
@@ -132,6 +133,7 @@ export default {
       });
       Object.assign(this.templateOptions, {
         plugins: ["inlineformat","variables"],
+        source: false,
         inlineformat: {
             items: ['redspan'],
             itemsObj: {
@@ -141,7 +143,8 @@ export default {
                         tag: 'span',
                         attr: {
                             'class': 'redspan',
-                            'data-contenteditable': 'false'
+                            'data-contenteditable': 'false',
+                            'contenteditable': 'false'
                         }
                     }
                 },
